@@ -1,0 +1,10 @@
+{
+  "params": {
+    "name": "microcosm-caching",
+    "pypi": {
+      "repository": "pypi"
+    }
+  },
+  "type": "python-library",
+  "version": "2019.18.1"
+}
