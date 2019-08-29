@@ -3,15 +3,20 @@ Unit-tests for memcached cache backend.
 
 """
 from hamcrest import assert_that, equal_to, is_
+from microcosm.api import create_object_graph, load_from_dict
 from parameterized import parameterized
 
-from microcosm_caching.memcached import MemcachedCache
 
-
-class TestMemcachedCache:
+class TestResourceCacheFactory:
 
     def setup(self):
-        self.cache = MemcachedCache(testing=True)
+        self.graph = create_object_graph(
+            "test",
+            testing=True,
+            loader=load_from_dict(dict(
+                resource_cache=dict(enabled=True),
+            )),
+        )
 
     @parameterized([
         ("key", "string-value"),
@@ -23,10 +28,10 @@ class TestMemcachedCache:
             lst=["1", "2", "3"],
         )),
     ])
-    def test_set_and_get_value(self, key, value):
-        self.cache.set("key", value)
+    def test_set_and_get_value_when_resource_cache_is_enabled(self, key, value):
+        self.graph.resource_cache.set("key", value)
 
         assert_that(
-            self.cache.get("key"),
+            self.graph.resource_cache.get("key"),
             is_(equal_to(value)),
         )
