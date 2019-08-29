@@ -1,5 +1,5 @@
 # microcosm_caching
 
-Caching for microservices using microcosm.
+Caching for microcosm microservices.
 
-[![Circle CI](https://circleci.com/gh/globality-corp/microcosm-caching/tree/develop.svg?style=svg)](https://circleci.com/gh/globality-corp/microcosm-caching/tree/develop)
+[![CircleCI](https://circleci.com/gh/globality-corp/microcosm-caching.svg?style=svg&circle-token=4d985d6947b5d753c6f3b779a2475f389e7c0ef1)](https://circleci.com/gh/globality-corp/microcosm-caching)

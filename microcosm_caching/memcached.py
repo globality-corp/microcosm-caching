@@ -5,11 +5,10 @@ Serialization helpers for caching.
 from enum import IntEnum, unique
 from json import dumps, loads
 
-from microcosm_caching.base import CacheBase
-
-
 from pymemcache.client.base import Client
 from pymemcache.test.utils import MockMemcacheClient
+
+from microcosm_caching.base import CacheBase
 
 
 @unique
