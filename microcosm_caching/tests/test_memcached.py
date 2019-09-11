@@ -2,6 +2,8 @@
 Unit-tests for memcached cache backend.
 
 """
+from time import sleep
+
 from hamcrest import assert_that, equal_to, is_
 from parameterized import parameterized
 
@@ -24,9 +26,25 @@ class TestMemcachedCache:
         )),
     ])
     def test_set_and_get_value(self, key, value):
-        self.cache.set("key", value)
+        self.cache.set(key, value)
+
+        assert_that(
+            self.cache.get(key),
+            is_(equal_to(value)),
+        )
+
+    def test_set_with_ttl_works(self):
+        self.cache.set("key", "value", ttl=1)
 
         assert_that(
             self.cache.get("key"),
-            is_(equal_to(value)),
+            is_(equal_to("value")),
+        )
+
+        # retrieving key again should fail once ttl expired
+        # Nb. using sleep in unit-tests is not a best practice generally.
+        sleep(1)
+        assert_that(
+            self.cache.get("key"),
+            is_(equal_to(None)),
         )
