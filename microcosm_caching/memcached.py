@@ -88,5 +88,8 @@ class MemcachedCache(CacheBase):
     def get(self, key):
         return self.client.get(key)
 
-    def set(self, key, value):
-        return self.client.set(key, value)
+    def set(self, key, value, ttl=None):
+        if ttl is None:
+            # pymemcache interprets 0 as no expiration
+            ttl = 0
+        return self.client.set(key, value, expire=ttl)
