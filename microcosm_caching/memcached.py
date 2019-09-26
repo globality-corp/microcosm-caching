@@ -33,9 +33,9 @@ def json_serializer(key, value):
 
     """
     if isinstance(value, str) or isinstance(value, bytes):
-        return value, SerializationFlag.STRING
+        return value, SerializationFlag.STRING.value
 
-    return dumps(value), SerializationFlag.JSON
+    return dumps(value), SerializationFlag.JSON.value
 
 
 def json_deserializer(key, value, flags):
