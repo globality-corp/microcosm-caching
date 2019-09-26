@@ -3,11 +3,7 @@ from json import dumps
 from hamcrest import assert_that, is_
 from parameterized import parameterized
 
-from microcosm_caching.memcached import (
-    SerializationFlag,
-    json_deserializer,
-    json_serializer,
-)
+from microcosm_caching.memcached import SerializationFlag, json_deserializer, json_serializer
 
 
 @parameterized([
