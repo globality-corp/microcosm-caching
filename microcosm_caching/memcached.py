@@ -4,8 +4,9 @@ Serialization helpers for caching.
 """
 from enum import IntEnum, unique
 from json import dumps, loads
+from typing import Optional, Tuple
 
-from pymemcache.client.base import Client
+from pymemcache.client.hash import HashClient
 from pymemcache.test.utils import MockMemcacheClient
 
 from microcosm_caching.base import CacheBase
@@ -65,8 +66,7 @@ class MemcachedCache(CacheBase):
     """
     def __init__(
         self,
-        host="localhost",
-        port=11211,
+        servers: Optional[Tuple[str, int]] = None,
         connect_timeout=None,
         read_timeout=None,
         serializer=json_serializer,
@@ -74,7 +74,6 @@ class MemcachedCache(CacheBase):
         testing=False,
     ):
         client_kwargs = dict(
-            server=(host, port),
             connect_timeout=connect_timeout,
             timeout=read_timeout,
             serializer=serializer,
@@ -82,9 +81,15 @@ class MemcachedCache(CacheBase):
         )
 
         if testing:
-            self.client = MockMemcacheClient(**client_kwargs)
+            self.client = MockMemcacheClient(
+                server=None,
+                **client_kwargs,
+            )
         else:
-            self.client = Client(**client_kwargs)
+            self.client = HashClient(
+                servers=servers,
+                **client_kwargs,
+            )
 
     def get(self, key: str):
         return self.client.get(key)

@@ -1,15 +1,14 @@
 from microcosm.api import defaults, typed
-from microcosm.config.types import boolean
+from microcosm.config.types import boolean, comma_separated_list
 
 from microcosm_caching.memcached import MemcachedCache
 
 
 @defaults(
     enabled=typed(boolean, default_value=False),
-    host="localhost",
-    port=typed(int, default_value=11211),
-    connect_timeout=3,
-    read_timeout=2,
+    servers=typed(comma_separated_list, default_value="localhost:11211"),
+    connect_timeout=typed(int, default_value=3),
+    read_timeout=typed(int, default_value=2),
 )
 def configure_resource_cache(graph):
     """
@@ -21,12 +20,17 @@ def configure_resource_cache(graph):
         return None
 
     kwargs = dict(
-        host=graph.config.resource_cache.host,
-        port=graph.config.resource_cache.port,
+        servers=parse_server_config(graph.config.resource_cache.servers),
         connect_timeout=graph.config.resource_cache.connect_timeout,
         read_timeout=graph.config.resource_cache.read_timeout,
     )
+
     if graph.metadata.testing:
         kwargs.update(dict(testing=True))
 
     return MemcachedCache(**kwargs)
+
+
+def parse_server_config(servers):
+    # NB: Assume input of the form: ["host:port","host:port"]
+    return [server.split(":") for server in servers]
