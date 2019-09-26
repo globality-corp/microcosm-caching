@@ -29,9 +29,9 @@ class TestResourceCacheFactory:
         )),
     ])
     def test_set_and_get_value_when_resource_cache_is_enabled(self, key, value):
-        self.graph.resource_cache.set("key", value)
+        self.graph.resource_cache.set(key, value)
 
         assert_that(
-            self.graph.resource_cache.get("key"),
+            self.graph.resource_cache.get(key),
             is_(equal_to(value)),
         )

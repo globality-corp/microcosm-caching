@@ -80,16 +80,19 @@ class MemcachedCache(CacheBase):
             serializer=json_serializer,
             deserializer=json_deserializer,
         )
+
         if testing:
             self.client = MockMemcacheClient(**client_kwargs)
         else:
             self.client = Client(**client_kwargs)
 
-    def get(self, key):
+    def get(self, key: str):
         return self.client.get(key)
 
-    def set(self, key, value, ttl=None):
+    def set(self, key: str, value, ttl=None):
         if ttl is None:
             # pymemcache interprets 0 as no expiration
             ttl = 0
+        # NB: If input is malformed, this will not raise errors.
+        # set `noreply` to False for further debugging
         return self.client.set(key, value, expire=ttl)
