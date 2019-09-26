@@ -77,8 +77,8 @@ class MemcachedCache(CacheBase):
             server=(host, port),
             connect_timeout=connect_timeout,
             timeout=read_timeout,
-            serializer=json_serializer,
-            deserializer=json_deserializer,
+            serializer=serializer,
+            deserializer=deserializer,
         )
 
         if testing:
