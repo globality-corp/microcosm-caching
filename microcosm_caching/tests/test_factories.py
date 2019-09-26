@@ -42,6 +42,6 @@ class TestResourceCacheFactory:
         assert_that(
             parse_server_config(["server1:11211", "server2:22122"]),
             is_(
-                [["server1", "11211"], ["server2", "22122"]],
+                [("server1", 11211), ("server2", 22122)],
             ),
         )

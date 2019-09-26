@@ -33,4 +33,9 @@ def configure_resource_cache(graph):
 
 def parse_server_config(servers):
     # NB: Assume input of the form: ["host:port","host:port"]
-    return [server.split(":") for server in servers]
+    parsed_servers = []
+    for server in servers:
+        host, port = server.split(":")
+        parsed_servers.append((host, int(port)))
+
+    return parsed_servers
