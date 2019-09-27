@@ -6,6 +6,8 @@ from hamcrest import assert_that, equal_to, is_
 from microcosm.api import create_object_graph, load_from_dict
 from parameterized import parameterized
 
+from microcosm_caching.factories import parse_server_config
+
 
 class TestResourceCacheFactory:
 
@@ -29,9 +31,17 @@ class TestResourceCacheFactory:
         )),
     ])
     def test_set_and_get_value_when_resource_cache_is_enabled(self, key, value):
-        self.graph.resource_cache.set("key", value)
+        self.graph.resource_cache.set(key, value)
 
         assert_that(
-            self.graph.resource_cache.get("key"),
+            self.graph.resource_cache.get(key),
             is_(equal_to(value)),
+        )
+
+    def test_parse_server_config(self):
+        assert_that(
+            parse_server_config(["server1:11211", "server2:22122"]),
+            is_(
+                [("server1", 11211), ("server2", 22122)],
+            ),
         )

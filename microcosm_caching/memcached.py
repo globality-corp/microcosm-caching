@@ -4,8 +4,9 @@ Serialization helpers for caching.
 """
 from enum import IntEnum, unique
 from json import dumps, loads
+from typing import Optional, Tuple
 
-from pymemcache.client.base import Client
+from pymemcache.client.hash import HashClient
 from pymemcache.test.utils import MockMemcacheClient
 
 from microcosm_caching.base import CacheBase
@@ -33,9 +34,9 @@ def json_serializer(key, value):
 
     """
     if isinstance(value, str) or isinstance(value, bytes):
-        return value, SerializationFlag.STRING
+        return value, SerializationFlag.STRING.value
 
-    return dumps(value), SerializationFlag.JSON
+    return dumps(value), SerializationFlag.JSON.value
 
 
 def json_deserializer(key, value, flags):
@@ -65,8 +66,7 @@ class MemcachedCache(CacheBase):
     """
     def __init__(
         self,
-        host="localhost",
-        port=11211,
+        servers: Optional[Tuple[str, int]] = None,
         connect_timeout=None,
         read_timeout=None,
         serializer=json_serializer,
@@ -74,22 +74,30 @@ class MemcachedCache(CacheBase):
         testing=False,
     ):
         client_kwargs = dict(
-            server=(host, port),
             connect_timeout=connect_timeout,
             timeout=read_timeout,
-            serializer=json_serializer,
-            deserializer=json_deserializer,
+            serializer=serializer,
+            deserializer=deserializer,
         )
-        if testing:
-            self.client = MockMemcacheClient(**client_kwargs)
-        else:
-            self.client = Client(**client_kwargs)
 
-    def get(self, key):
+        if testing:
+            self.client = MockMemcacheClient(
+                server=None,
+                **client_kwargs,
+            )
+        else:
+            self.client = HashClient(
+                servers=servers,
+                **client_kwargs,
+            )
+
+    def get(self, key: str):
         return self.client.get(key)
 
-    def set(self, key, value, ttl=None):
+    def set(self, key: str, value, ttl=None):
         if ttl is None:
             # pymemcache interprets 0 as no expiration
             ttl = 0
+        # NB: If input is malformed, this will not raise errors.
+        # set `noreply` to False for further debugging
         return self.client.set(key, value, expire=ttl)
