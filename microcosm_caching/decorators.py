@@ -48,6 +48,44 @@ def cached(component, schema: Type[Schema], cache_prefix: str, ttl: int = DEFAUL
     metrics = get_metrics(graph)
     resource_cache: Optional[CacheBase] = graph.resource_cache
 
+    def retrieve_from_cache(key: str):
+        start_time = perf_counter()
+
+        resource = resource_cache.get(key)
+
+        elapsed_ms = (perf_counter() - start_time) * 1000
+
+        if metrics:
+            tags = [
+                "action:get",
+                f"resource:{schema.__name__}",
+            ]
+
+            metrics.timing("cache_timing", elapsed_ms, tags=tags)
+
+            if resource:
+                metrics.increment("cache_hit", tags=tags)
+            else:
+                metrics.increment("cache_miss", tags=tags)
+
+        return resource
+
+    def set_in_cache(key: str, value: Any) -> None:
+        start_time = perf_counter()
+
+        resource_cache.set(key, value, ttl=ttl)
+
+        elapsed_ms = (perf_counter() - start_time) * 1000
+
+        if metrics:
+            tags = [
+                "action:set",
+                f"resource:{schema.__name__}",
+            ]
+
+            metrics.timing("cache_timing", elapsed_ms, tags=tags)
+            metrics.increment("cache_set", tags=tags)
+
     def decorator(func):
         @wraps(func)
         def cache(*args, **kwargs) -> Schema:
@@ -56,23 +94,11 @@ def cached(component, schema: Type[Schema], cache_prefix: str, ttl: int = DEFAUL
 
             try:
                 key = cache_key(cache_prefix, kwargs[identifier_key])
-                cached_resource = retrieve_from_cache(
-                    key,
-                    resource_cache,
-                    metrics,
-                    schema,
-                )
+                cached_resource = retrieve_from_cache(key)
                 if not cached_resource:
                     resource = func(*args, **kwargs)
                     cached_resource = schema().dump(resource)
-                    set_in_cache(
-                        key,
-                        cached_resource,
-                        resource_cache,
-                        metrics,
-                        schema,
-                        ttl=ttl,
-                    )
+                    set_in_cache( key, cached_resource )
 
                 # NB: We're caching the serialized format of the resource, meaning
                 # we need to do a (wasteful) load here to enable it to be dumped correctly
@@ -86,41 +112,3 @@ def cached(component, schema: Type[Schema], cache_prefix: str, ttl: int = DEFAUL
     return decorator
 
 
-def retrieve_from_cache(key: str, resource_cache, metrics, schema):
-    start_time = perf_counter()
-
-    resource = resource_cache.get(key)
-
-    elapsed_ms = (perf_counter() - start_time) * 1000
-
-    if metrics:
-        tags = [
-            "action:get",
-            f"resource:{schema.__name__}",
-        ]
-
-        metrics.timing("cache_timing", elapsed_ms, tags=tags)
-
-        if resource:
-            metrics.increment("cache_hit", tags=tags)
-        else:
-            metrics.increment("cache_miss", tags=tags)
-
-    return resource
-
-
-def set_in_cache(key: str, value: Any, resource_cache: CacheBase, metrics, schema, ttl=None) -> None:
-    start_time = perf_counter()
-
-    resource_cache.set(key, value, ttl=ttl)
-
-    elapsed_ms = (perf_counter() - start_time) * 1000
-
-    if metrics:
-        tags = [
-            "action:set",
-            f"resource:{schema.__name__}",
-        ]
-
-        metrics.timing("cache_timing", elapsed_ms, tags=tags)
-        metrics.increment("cache_set", tags=tags)
