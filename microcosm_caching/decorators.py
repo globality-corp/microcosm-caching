@@ -1,7 +1,7 @@
 from functools import wraps
 from logging import Logger
 from time import perf_counter
-from typing import Any, Optional, Type
+from typing import Any, Type
 
 from marshmallow import Schema
 from microcosm.errors import NotBoundError
@@ -46,7 +46,7 @@ def cached(component, schema: Type[Schema], cache_prefix: str, ttl: int = DEFAUL
 
     graph = component.graph
     metrics = get_metrics(graph)
-    resource_cache: Optional[CacheBase] = graph.resource_cache
+    resource_cache: CacheBase = graph.resource_cache
 
     def retrieve_from_cache(key: str):
         start_time = perf_counter()
@@ -98,7 +98,7 @@ def cached(component, schema: Type[Schema], cache_prefix: str, ttl: int = DEFAUL
                 if not cached_resource:
                     resource = func(*args, **kwargs)
                     cached_resource = schema().dump(resource)
-                    set_in_cache( key, cached_resource )
+                    set_in_cache(key, cached_resource)
 
                 # NB: We're caching the serialized format of the resource, meaning
                 # we need to do a (wasteful) load here to enable it to be dumped correctly
@@ -110,5 +110,3 @@ def cached(component, schema: Type[Schema], cache_prefix: str, ttl: int = DEFAUL
 
         return cache
     return decorator
-
-
