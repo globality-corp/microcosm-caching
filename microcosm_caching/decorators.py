@@ -39,7 +39,7 @@ def cached(component, schema: Type[Schema], cache_prefix: str, ttl: int = DEFAUL
     :param schema: The schema corresponding to the response type of the component
     :param cache_prefix: Namespace to use for cache keys
     :param ttl: How long to cache the underlying resource
-    :return:
+    :return: the resource (i.e. loaded schema instance)
     """
     identifier_key: str = getattr(component, "identifier_key")
     logger: Logger = getattr(component, "logger")
