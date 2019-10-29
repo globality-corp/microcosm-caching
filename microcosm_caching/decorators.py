@@ -26,14 +26,22 @@ def cache_key(cache_prefix, key):
 
 def cached(component, schema: Type[Schema], cache_prefix: str, ttl: int = DEFAULT_TTL):
     """
-    Intended mainly for use as a decorator around microcosm_flask.CRUDStoreAdapters, namely
-    those revolving around retrieve functions, such that the resource is identifiable
-    by a single ID.
+    Caches the result of a decorated component function, given that the both the underlying
+    function and the component itself adhere to a given structure.
 
     Decorated components must expose:
       * an identifier_key function
       * a logger reference
       * the graph
+
+    The cached resource must be:
+      * Adhere to a given Schema resource
+      * Be identifiable by a single ID
+
+    Main usage expected here is for a CRUDStoreAdapter subclass, but may be usable in other contexts as well.
+
+    Example usage:
+        cached(component, ConcreteSchema, "prefix")(component.retrieve)
 
     :param component: A microcosm-based controller component
     :param schema: The schema corresponding to the response type of the component
