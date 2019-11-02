@@ -11,7 +11,7 @@ from microcosm_caching.base import CacheBase
 
 
 DEFAULT_TTL = 60 * 60  # Cache for an hour by default
-DEFAULT_LOCK_TTL = 3  # Stop incoming writes for 5 seconds by default
+DEFAULT_LOCK_TTL = 3  # Stop incoming writes for 3 seconds by default
 
 
 def get_metrics(graph):
