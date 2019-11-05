@@ -92,12 +92,43 @@ class MemcachedCache(CacheBase):
             )
 
     def get(self, key: str):
+        """
+        Return the value for a key, or None if not found
+
+        """
         return self.client.get(key)
 
+    def add(self, key: str, value, ttl=None):
+        """
+        Set the value for a key, but only that key hasn't been set.
+
+        """
+        if ttl is None:
+            # pymemcache interprets 0 as no expiration
+            ttl = 0
+        # NB: If input is malformed, this will not raise errors.
+        # set `noreply` to False for further debugging
+        return self.client.add(key, value, expire=ttl)
+
     def set(self, key: str, value, ttl=None):
+        """
+        Set the value for a key, but overwriting existing values
+
+        """
         if ttl is None:
             # pymemcache interprets 0 as no expiration
             ttl = 0
         # NB: If input is malformed, this will not raise errors.
         # set `noreply` to False for further debugging
         return self.client.set(key, value, expire=ttl)
+
+    def set_many(self, values, ttl=None):
+        """
+        Set the many key-value pairs at a time, overwriting existing values
+
+        """
+        if ttl is None:
+            # pymemcache interprets 0 as no expiration
+            ttl = 0
+
+        return self.client.set_many(values, expire=ttl)
