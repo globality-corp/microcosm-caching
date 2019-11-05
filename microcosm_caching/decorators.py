@@ -1,7 +1,14 @@
+from dataclasses import dataclass
 from functools import wraps
 from logging import Logger
 from time import perf_counter
-from typing import Any, Dict, Type
+from typing import (
+    Any,
+    Dict,
+    List,
+    Optional,
+    Type,
+)
 
 from marshmallow import Schema
 from microcosm.errors import NotBoundError
@@ -19,6 +26,35 @@ def get_metrics(graph):
         return graph.metrics
     except NotBoundError:
         return None
+
+
+@dataclass
+class Invalidation:
+    schema: Type[Schema]
+    arguments: List[str]
+    kwarg_mappings: Optional[Dict[str, str]] = None
+
+    def from_kwargs(self, kwargs) -> Dict[str, Any]:
+        """
+        Constructs invalidation kwargs based on known search arguments
+
+        """
+        # Default case, no need for special mappings
+        if not self.kwarg_mappings:
+            return {
+                argument: kwargs[argument]
+                for argument in self.arguments
+            }
+
+        invalidation_kwargs: Dict[str, Any] = {}
+        for argument in self.arguments:
+            try:
+                invalidation_kwargs[argument] = kwargs[argument]
+            except KeyError:
+                mapped_argument = self.kwarg_mappings[argument]
+                invalidation_kwargs[argument] = kwargs[mapped_argument]
+
+        return invalidation_kwargs
 
 
 def cache_key(cache_prefix, schema, args, kwargs) -> str:
@@ -130,7 +166,7 @@ def cached(component, schema: Type[Schema], cache_prefix: str, ttl: int = DEFAUL
 
 def invalidates(
     component,
-    invalidations,
+    invalidations: List[Invalidation],
     cache_prefix,
     lock_ttl=DEFAULT_LOCK_TTL
 ):
@@ -179,12 +215,11 @@ def invalidates(
                 return func(*args, **kwargs)
 
             values: Dict[str, None] = {}
-            for schema, invalidation_kwargs in invalidations:
+            for invalidation in invalidations:
+                invalidation_kwargs = invalidation.from_kwargs(kwargs)
+
                 # NB: We assume that we don't cache via args
-                key = cache_key(cache_prefix, schema, (), {
-                    invalidation_kwarg: kwargs[invalidation_kwarg]
-                    for invalidation_kwarg in invalidation_kwargs
-                })
+                key = cache_key(cache_prefix, invalidation.schema, (), invalidation_kwargs)
                 values[key] = None
 
             result = func(*args, **kwargs)
