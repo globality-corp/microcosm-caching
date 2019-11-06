@@ -3,7 +3,7 @@ Serialization helpers for caching.
 
 """
 from enum import IntEnum, unique
-from json import dumps, loads
+from simplejson import dumps, loads
 from typing import Optional, Tuple
 
 from pymemcache.client.hash import HashClient
