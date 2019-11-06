@@ -3,11 +3,11 @@ Serialization helpers for caching.
 
 """
 from enum import IntEnum, unique
-from json import dumps, loads
 from typing import Optional, Tuple
 
 from pymemcache.client.hash import HashClient
 from pymemcache.test.utils import MockMemcacheClient
+from simplejson import dumps, loads
 
 from microcosm_caching.base import CacheBase
 
