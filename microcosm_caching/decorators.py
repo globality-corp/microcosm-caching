@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from functools import wraps
+from hashlib import sha1
 from logging import Logger
 from time import perf_counter
 from typing import (
@@ -64,9 +65,8 @@ def cache_key(cache_prefix, schema, args, kwargs) -> str:
     """
     key = (schema.__name__,) + args
     key += tuple(sorted((a, b) for a, b in kwargs.items()))
-    key = hash(key)
 
-    return f"{cache_prefix}:{key}"
+    return sha1(f"{cache_prefix}:{key}".encode("utf-8")).hexdigest()
 
 
 def cached(component, schema: Type[Schema], cache_prefix: str, ttl: int = DEFAULT_TTL):
