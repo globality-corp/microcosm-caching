@@ -262,12 +262,12 @@ def invalidate_batch(
     Invalidates a set of prescribed keys, based on a combination of:
         * specified arguments
         * schema
-        * returned attribute
+        * a "batch" attribute
 
-    Note: this does require that the input args to the given function correspond to the
-    invalidation args given. As such, using it conjunction with certain functions (such as
-    a plain delete) may not provide sufficient context for invalidation, and caching should
-    not be used in such scenarios.
+    This function is meant for cases of batch uploads, such that there would
+    exist a set of resources created as a part of this operation which may each
+    need to trigger their own invalidations. This is subject to the same limitations
+    as the `invalidates` decorator.
 
     """
     graph = component.graph
