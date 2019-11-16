@@ -257,7 +257,6 @@ def invalidate_batch(
     cache_prefix,
     lock_ttl=DEFAULT_LOCK_TTL,
     schema_version: Optional[str] = None,
-
 ):
     """
     Invalidates a set of prescribed keys, based on a combination of:
