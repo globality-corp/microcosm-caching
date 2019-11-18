@@ -166,3 +166,29 @@ class TestDecorators:
         assert_that(self.cached_retrieve(key_id=1)["value"], is_(4))
         assert_that(self.cached_extended_retrieve(key_id=1)["value"], is_(5))
         assert_that(self.cached_retrieve_for(key_id=1)["values"], is_(6))
+
+    def test_cached_with_no_build_version(self):
+        name = "test"
+        graph = create_object_graph(
+            name,
+            testing=True,
+            loader=load_from_dict(dict(
+                resource_cache=dict(enabled=True),
+            )),
+        )
+        graph.use("controller")
+        controller = graph.controller
+
+        cached_retrieve = cached(controller, TestSchema)(controller.retrieve)
+
+        first_call = cached_retrieve(key_id=1)
+        key = cache_key(name, TestSchema, (), dict(key_id=1), version=None)
+
+        # Check that we pushed the resource into the cache
+        assert_that(
+            graph.resource_cache.get(key),
+            is_({"value": 1}),
+        )
+
+        # And that a subsequent call hits the cache
+        assert_that(cached_retrieve(key_id=1)["value"], is_(first_call["value"]))
