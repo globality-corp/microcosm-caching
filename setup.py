@@ -3,7 +3,7 @@ from setuptools import find_packages, setup
 
 
 project = "microcosm-caching"
-version = "0.6.0"
+version = "0.7.0"
 
 setup(
     name=project,
@@ -35,6 +35,7 @@ setup(
     entry_points={
         "microcosm.factories": [
             "resource_cache = microcosm_caching.factories:configure_resource_cache",
+            "build_info = microcosm_caching.build_info:configure_build_info",
         ]
     },
     tests_require=[

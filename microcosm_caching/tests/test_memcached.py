@@ -2,6 +2,7 @@
 Unit-tests for memcached cache backend.
 
 """
+from decimal import Decimal
 from time import sleep
 
 from hamcrest import assert_that, equal_to, is_
@@ -24,6 +25,7 @@ class TestMemcachedCache:
             nested=dict(nested_key="nested_value"),
             lst=["1", "2", "3"],
         )),
+        ("key", Decimal("10000.0")),
     ])
     def test_set_and_get_value(self, key, value):
         self.cache.set(key, value)
