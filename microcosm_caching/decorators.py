@@ -69,7 +69,12 @@ def cache_key(cache_prefix, schema, args, kwargs) -> str:
     return sha1(f"{cache_prefix}:{key}".encode("utf-8")).hexdigest()
 
 
-def cached(component, schema: Type[Schema], cache_prefix: str, ttl: int = DEFAULT_TTL):
+def cached(
+    component,
+    schema: Type[Schema],
+    cache_prefix: Optional[str] = None,
+    ttl: int = DEFAULT_TTL,
+):
     """
     Caches the result of a decorated component function, given that the both the underlying
     function and the component itself adhere to a given structure.
@@ -90,7 +95,7 @@ def cached(component, schema: Type[Schema], cache_prefix: str, ttl: int = DEFAUL
 
     :param component: A microcosm-based component
     :param schema: The schema corresponding to the response type of the component
-    :param cache_prefix: Namespace to use for cache keys
+    :param cache_prefix: Namespace to use for cache keys. Defaults to the name attached to the graph
     :param ttl: How long to cache the underlying resource
     :return: the resource (i.e. loaded schema instance)
     """
@@ -99,6 +104,7 @@ def cached(component, schema: Type[Schema], cache_prefix: str, ttl: int = DEFAUL
     graph = component.graph
     metrics = get_metrics(graph)
     resource_cache: CacheBase = graph.resource_cache
+    cache_prefix = cache_prefix or graph.metadata.name
 
     def retrieve_from_cache(key: str):
         start_time = perf_counter()
@@ -167,8 +173,9 @@ def cached(component, schema: Type[Schema], cache_prefix: str, ttl: int = DEFAUL
 def invalidates(
     component,
     invalidations: List[Invalidation],
-    cache_prefix,
-    lock_ttl=DEFAULT_LOCK_TTL
+    cache_prefix: Optional[str] = None,
+    lock_ttl=DEFAULT_LOCK_TTL,
+    schema_version: Optional[str] = None,
 ):
     """
     Invalidates a set of prescribed keys, based on a combination of:
@@ -184,6 +191,7 @@ def invalidates(
     graph = component.graph
     metrics = get_metrics(graph)
     resource_cache: CacheBase = graph.resource_cache
+    cache_prefix = cache_prefix or graph.metadata.name
 
     def delete_from_cache(values) -> None:
         """
