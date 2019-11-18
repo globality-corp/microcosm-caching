@@ -78,7 +78,7 @@ def cache_key(cache_prefix, schema, args, kwargs, version: Optional[str] = None)
 def cached(
     component,
     schema: Type[Schema],
-    cache_prefix: str,
+    cache_prefix: Optional[str] = None,
     ttl: int = DEFAULT_TTL,
     schema_version: Optional[str] = None,
 ):
@@ -102,7 +102,7 @@ def cached(
 
     :param component: A microcosm-based component
     :param schema: The schema corresponding to the response type of the component
-    :param cache_prefix: Namespace to use for cache keys
+    :param cache_prefix: Namespace to use for cache keys. Defaults to the name attached to the graph
     :param ttl: How long to cache the underlying resource
     :param schema_version: The version of this schema. Used as part of the cache key. If not supplied,
                            will default to the build version, if supplied
@@ -113,7 +113,9 @@ def cached(
     graph = component.graph
     metrics = get_metrics(graph)
     resource_cache: CacheBase = graph.resource_cache
+
     version = schema_version or get_build_version(graph)
+    cache_prefix = cache_prefix or graph.metadata.name
 
     def retrieve_from_cache(key: str):
         start_time = perf_counter()
@@ -182,7 +184,7 @@ def cached(
 def invalidates(
     component,
     invalidations: List[Invalidation],
-    cache_prefix,
+    cache_prefix: Optional[str] = None,
     lock_ttl=DEFAULT_LOCK_TTL,
     schema_version: Optional[str] = None,
 ):
@@ -200,7 +202,9 @@ def invalidates(
     graph = component.graph
     metrics = get_metrics(graph)
     resource_cache: CacheBase = graph.resource_cache
+
     version = schema_version or get_build_version(graph)
+    cache_prefix = cache_prefix or graph.metadata.name
 
     def delete_from_cache(values) -> None:
         """
