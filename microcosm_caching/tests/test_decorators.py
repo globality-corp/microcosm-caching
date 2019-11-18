@@ -93,10 +93,9 @@ class TestDecorators:
                     ),
                 ),
             ],
-            cache_prefix=self.cache_prefix,
         )(controller.create)
 
-        self.cached_retrieve_for = cached(controller, TestForSchema, self.cache_prefix)(controller.retrieve_for)
+        self.cached_retrieve_for = cached(controller, TestForSchema)(controller.retrieve_for)
 
     def test_cached(self):
         self.cached_retrieve(key_id=1)
