@@ -11,11 +11,12 @@ from typing import (
     Type,
 )
 
-from marshmallow import Schema
+from marshmallow import EXCLUDE, Schema
 from microcosm.errors import NotBoundError
 from pymemcache.exceptions import MemcacheError
 
 from microcosm_caching.base import CacheBase
+from microcosm_caching.build_info import BuildInfo
 
 
 DEFAULT_TTL = 60 * 60  # Cache for an hour by default
@@ -27,6 +28,11 @@ def get_metrics(graph):
         return graph.metrics
     except NotBoundError:
         return None
+
+
+def get_build_version(graph) -> Optional[str]:
+    build_info: BuildInfo = graph.build_info
+    return build_info.sha1
 
 
 @dataclass
@@ -58,7 +64,7 @@ class Invalidation:
         return invalidation_kwargs
 
 
-def cache_key(cache_prefix, schema, args, kwargs) -> str:
+def cache_key(cache_prefix, schema, args, kwargs, version: Optional[str] = None) -> str:
     """
     Hash a key according to the schema and input args.
 
@@ -66,7 +72,7 @@ def cache_key(cache_prefix, schema, args, kwargs) -> str:
     key = (schema.__name__,) + args
     key += tuple(sorted((a, b) for a, b in kwargs.items()))
 
-    return sha1(f"{cache_prefix}:{key}".encode("utf-8")).hexdigest()
+    return sha1(f"{cache_prefix}:{version}:{key}".encode("utf-8")).hexdigest()
 
 
 def cached(
@@ -74,6 +80,7 @@ def cached(
     schema: Type[Schema],
     cache_prefix: Optional[str] = None,
     ttl: int = DEFAULT_TTL,
+    schema_version: Optional[str] = None,
 ):
     """
     Caches the result of a decorated component function, given that the both the underlying
@@ -97,6 +104,8 @@ def cached(
     :param schema: The schema corresponding to the response type of the component
     :param cache_prefix: Namespace to use for cache keys. Defaults to the name attached to the graph
     :param ttl: How long to cache the underlying resource
+    :param schema_version: The version of this schema. Used as part of the cache key. If not supplied,
+                           will default to the build version, if supplied
     :return: the resource (i.e. loaded schema instance)
     """
     logger: Logger = getattr(component, "logger")
@@ -104,6 +113,8 @@ def cached(
     graph = component.graph
     metrics = get_metrics(graph)
     resource_cache: CacheBase = graph.resource_cache
+
+    version = schema_version or get_build_version(graph)
     cache_prefix = cache_prefix or graph.metadata.name
 
     def retrieve_from_cache(key: str):
@@ -151,7 +162,7 @@ def cached(
                 return func(*args, **kwargs)
 
             try:
-                key = cache_key(cache_prefix, schema, args, kwargs)
+                key = cache_key(cache_prefix, schema, args, kwargs, version)
                 cached_resource = retrieve_from_cache(key)
                 if not cached_resource:
                     resource = func(*args, **kwargs)
@@ -161,7 +172,7 @@ def cached(
                 # NB: We're caching the serialized format of the resource, meaning
                 # we need to do a (wasteful) load here to enable it to be dumped correctly
                 # later on in the flow. This could probably be made more efficient
-                return schema().load(cached_resource, unknown="exclude")
+                return schema().load(cached_resource, unknown=EXCLUDE)
             except (MemcacheError, ConnectionRefusedError) as error:
                 logger.warning("Unable to retrieve/save cache data", extra=dict(error=error))
                 return func(*args, **kwargs)
@@ -191,6 +202,8 @@ def invalidates(
     graph = component.graph
     metrics = get_metrics(graph)
     resource_cache: CacheBase = graph.resource_cache
+
+    version = schema_version or get_build_version(graph)
     cache_prefix = cache_prefix or graph.metadata.name
 
     def delete_from_cache(values) -> None:
@@ -227,7 +240,7 @@ def invalidates(
                 invalidation_kwargs = invalidation.from_kwargs(kwargs)
 
                 # NB: We assume that we don't cache via args
-                key = cache_key(cache_prefix, invalidation.schema, (), invalidation_kwargs)
+                key = cache_key(cache_prefix, invalidation.schema, (), invalidation_kwargs, version)
                 values[key] = None
 
             result = func(*args, **kwargs)

@@ -35,6 +35,7 @@ setup(
     entry_points={
         "microcosm.factories": [
             "resource_cache = microcosm_caching.factories:configure_resource_cache",
+            "build_info = microcosm_caching.build_info:configure_build_info",
         ]
     },
     tests_require=[
