@@ -11,6 +11,7 @@ from microcosm_caching.decorators import (
     Invalidation,
     cache_key,
     cached,
+    invalidate_batch,
     invalidates,
 )
 
@@ -46,6 +47,9 @@ class TestController:
         return {"value": self.calls}
 
     def create(self, **kwargs):
+        return
+
+    def create_batch(self, **kwargs):
         return
 
     def retrieve_for(self, **kwargs):
@@ -104,6 +108,12 @@ class TestDecorators:
             invalidations=invalidations,
         )(controller.create)
 
+        self.cached_create_batch = invalidate_batch(
+            controller,
+            batch_attribute="items",
+            invalidations=invalidations,
+        )(controller.create_batch)
+
         self.cached_retrieve_for = cached(controller, TestForSchema)(controller.retrieve_for)
 
     def test_cached(self):
@@ -149,6 +159,36 @@ class TestDecorators:
 
         # Then trigger invalidation
         self.cached_create(key_id=1)
+
+        # And check that all keys are marked for deletion
+        for schema, kwargs in (
+            (TestSchema, dict(key_id=1)),
+            (TestForSchema, dict(key_id=1)),
+            (TestExtendedSchema, dict(extended_key_id=1)),
+        ):
+            key = cache_key(self.cache_prefix, schema, (), kwargs, version=self.build_version)
+            assert_that(
+                self.graph.resource_cache.get(key),
+                is_(None),
+            )
+
+        # Then validate that it was invalidated correctly
+        assert_that(self.cached_retrieve(key_id=1)["value"], is_(4))
+        assert_that(self.cached_extended_retrieve(key_id=1)["value"], is_(5))
+        assert_that(self.cached_retrieve_for(key_id=1)["values"], is_(6))
+
+    def test_invalidates_batch(self):
+        # Populate the basic retrieve key
+        self.cached_retrieve(key_id=1)
+
+        # And the extended key
+        self.cached_extended_retrieve(extended_key_id=1)
+
+        # And the retrieve_for key
+        self.cached_retrieve_for(key_id=1)
+
+        # Then trigger invalidation
+        self.cached_create_batch(items=[dict(key_id=1)])
 
         # And check that all keys are marked for deletion
         for schema, kwargs in (
