@@ -252,3 +252,77 @@ def invalidates(
 
         return cache
     return decorator
+
+
+def invalidate_batch(
+    component,
+    batch_attribute,
+    invalidations: List[Invalidation],
+    cache_prefix: Optional[str] = None,
+    lock_ttl=DEFAULT_LOCK_TTL,
+    schema_version: Optional[str] = None,
+):
+    """
+    Invalidates a set of prescribed keys, based on a combination of:
+        * specified arguments
+        * schema
+        * a "batch" attribute
+
+    This function is meant for cases of batch uploads, such that there would
+    exist a set of resources created as a part of this operation which may each
+    need to trigger their own invalidations. This is subject to the same limitations
+    as the `invalidates` decorator.
+
+    """
+    graph = component.graph
+    metrics = get_metrics(graph)
+    resource_cache: CacheBase = graph.resource_cache
+
+    version = schema_version or get_build_version(graph)
+    cache_prefix = cache_prefix or graph.metadata.name
+
+    def delete_from_cache(values) -> None:
+        """
+        "Delete" from cache by locking writes to a key for a designated
+        amount of time.
+
+        In conjunction with the cached() decorator, this allows the "get and set"
+        flow to behave without special cases
+
+        """
+        start_time = perf_counter()
+
+        resource_cache.set_many(values, ttl=lock_ttl)
+
+        elapsed_ms = (perf_counter() - start_time) * 1000
+
+        if metrics:
+            tags = [
+                "action:set_many",
+            ]
+
+            metrics.timing("cache_timing", elapsed_ms, tags=tags)
+            metrics.increment("cache_set_many", tags=tags)
+
+    def decorator(func):
+        @wraps(func)
+        def cache(*args, **kwargs) -> Schema:
+            if not resource_cache:
+                return func(*args, **kwargs)
+
+            values: Dict[str, None] = {}
+            for item in kwargs[batch_attribute]:
+                # NB: We assume that we don't cache via args
+                for invalidation in invalidations:
+                    invalidation_kwargs = invalidation.from_kwargs(item)
+                    key = cache_key(cache_prefix, invalidation.schema, (), invalidation_kwargs, version)
+                    values[key] = None
+
+            batch_result = func(*args, **kwargs)
+            # NB: Exceptions raised from cache operations aren't caught here;
+            # This will prevent stale data from persisting after request completion
+            delete_from_cache(values)
+
+            return batch_result
+        return cache
+    return decorator
