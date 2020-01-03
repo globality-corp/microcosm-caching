@@ -25,7 +25,7 @@ class SerializationFlag(IntEnum):
     JSON = 2
 
 
-def json_serializer(key, value):
+class JsonSerde:
     """
     Simple JSON serializer for use with caching backends
     that only support string/bytes value storage.
@@ -33,28 +33,22 @@ def json_serializer(key, value):
     Memcached is the primary use case.
 
     """
-    if isinstance(value, str) or isinstance(value, bytes):
-        return value, SerializationFlag.STRING.value
 
-    return dumps(value), SerializationFlag.JSON.value
+    def serialize(self, key, value):
+        if isinstance(value, str) or isinstance(value, bytes):
+            return value, SerializationFlag.STRING.value
 
+        return dumps(value), SerializationFlag.JSON.value
 
-def json_deserializer(key, value, flags):
-    """
-    Simple JSON deserializer for use with caching backends
-    that only support string/bytes value storage.
+    def deserialize(self, key, value, flags):
+        if flags == SerializationFlag.STRING:
+            if isinstance(value, bytes):
+                value = value.decode("utf-8")
+            return value
+        elif flags == SerializationFlag.JSON:
+            return loads(value)
 
-    Memcached is the primary use case.
-
-    """
-    if flags == SerializationFlag.STRING:
-        if isinstance(value, bytes):
-            value = value.decode("utf-8")
-        return value
-    elif flags == SerializationFlag.JSON:
-        return loads(value)
-
-    raise ValueError(f"Unknown serialization format flags: {flags}")
+        raise ValueError(f"Unknown serialization format flags: {flags}")
 
 
 class MemcachedCache(CacheBase):
@@ -69,15 +63,13 @@ class MemcachedCache(CacheBase):
         servers: Optional[Tuple[str, int]] = None,
         connect_timeout=None,
         read_timeout=None,
-        serializer=json_serializer,
-        deserializer=json_deserializer,
+        serde=None,
         testing=False,
     ):
         client_kwargs = dict(
             connect_timeout=connect_timeout,
             timeout=read_timeout,
-            serializer=serializer,
-            deserializer=deserializer,
+            serde=serde if serde is not None else JsonSerde(),
         )
 
         if testing:
