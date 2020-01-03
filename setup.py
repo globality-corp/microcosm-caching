@@ -3,7 +3,7 @@ from setuptools import find_packages, setup
 
 
 project = "microcosm-caching"
-version = "0.8.0"
+version = "0.9.0"
 
 setup(
     name=project,
@@ -21,7 +21,7 @@ setup(
         "marshmallow>=3.0.0",
         "microcosm>=2.12.0",
         "microcosm-logging>=1.3.0",
-        "pymemcache>=2.2.2",
+        "pymemcache>=3.0.0",
         "simplejson>=3.16.0",
     ],
     extras_require={
