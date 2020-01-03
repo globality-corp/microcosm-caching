@@ -3,7 +3,7 @@ from setuptools import find_packages, setup
 
 
 project = "microcosm-caching"
-version = "0.8.0"
+version = "0.9.0"
 
 setup(
     name=project,
