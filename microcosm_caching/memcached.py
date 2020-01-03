@@ -25,7 +25,7 @@ class SerializationFlag(IntEnum):
     JSON = 2
 
 
-class JsonSerde:
+class JsonSerializerDeserializer:
     """
     Simple JSON serializer for use with caching backends
     that only support string/bytes value storage.
@@ -69,7 +69,7 @@ class MemcachedCache(CacheBase):
         client_kwargs = dict(
             connect_timeout=connect_timeout,
             timeout=read_timeout,
-            serde=serde if serde is not None else JsonSerde(),
+            serde=serde or JsonSerializerDeserializer(),
         )
 
         if testing:
