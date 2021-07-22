@@ -6,9 +6,8 @@ from decimal import Decimal
 from time import sleep
 
 from hamcrest import assert_that, equal_to, is_
-from parameterized import parameterized
-
 from microcosm_caching.memcached import MemcachedCache
+from parameterized import parameterized
 
 
 class TestMemcachedCache:

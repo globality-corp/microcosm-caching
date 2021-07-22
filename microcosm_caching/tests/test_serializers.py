@@ -1,9 +1,8 @@
 from json import dumps
 
 from hamcrest import assert_that, is_
-from parameterized import parameterized
-
 from microcosm_caching.memcached import JsonSerializerDeserializer, SerializationFlag
+from parameterized import parameterized
 
 
 @parameterized([
