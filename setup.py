@@ -3,7 +3,7 @@ from setuptools import find_packages, setup
 
 
 project = "microcosm-caching"
-version = "0.9.0"
+version = "0.10.0"
 
 setup(
     name=project,
@@ -26,6 +26,18 @@ setup(
     ],
     extras_require={
         "metrics": "microcosm-metrics>=2.2.0",
+        "lint": [
+            "isort<5",
+        ],
+        "test": [
+            "coverage>=3.7.1",
+            "parameterized>=0.7.4",
+            "PyHamcrest>=1.8.5",
+        ],
+        "typehinting": [
+            "mypy",
+            "types-simplejson",
+        ],
     },
     setup_requires=[
         "nose>=1.3.6",
@@ -38,9 +50,4 @@ setup(
             "build_info = microcosm_caching.build_info:configure_build_info",
         ]
     },
-    tests_require=[
-        "coverage>=3.7.1",
-        "parameterized>=0.7.0",
-        "PyHamcrest>=1.8.5",
-    ],
 )

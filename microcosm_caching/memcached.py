@@ -65,11 +65,13 @@ class MemcachedCache(CacheBase):
         read_timeout=None,
         serde=None,
         testing=False,
+        ignore_exc=False,
     ):
         client_kwargs = dict(
             connect_timeout=connect_timeout,
             timeout=read_timeout,
             serde=serde or JsonSerializerDeserializer(),
+            ignore_exc=ignore_exc,
         )
 
         if testing:
