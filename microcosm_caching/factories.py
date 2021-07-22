@@ -9,6 +9,7 @@ from microcosm_caching.memcached import MemcachedCache
     servers=typed(comma_separated_list, default_value="localhost:11211"),
     connect_timeout=typed(int, default_value=3),
     read_timeout=typed(int, default_value=2),
+    ignore_exc=typed(boolean, default_value=False),
 )
 def configure_resource_cache(graph):
     """
@@ -23,6 +24,7 @@ def configure_resource_cache(graph):
         servers=parse_server_config(graph.config.resource_cache.servers),
         connect_timeout=graph.config.resource_cache.connect_timeout,
         read_timeout=graph.config.resource_cache.read_timeout,
+        ignore_exc=graph.config.resource_cache.ignore_exc,
     )
 
     if graph.metadata.testing:
