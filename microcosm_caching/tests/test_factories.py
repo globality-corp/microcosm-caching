@@ -2,11 +2,11 @@
 Unit-tests for memcached cache backend.
 
 """
-from hamcrest import assert_that, equal_to, is_
 from microcosm.api import create_object_graph, load_from_dict
-from parameterized import parameterized
 
+from hamcrest import assert_that, equal_to, is_
 from microcosm_caching.factories import parse_server_config
+from parameterized import parameterized
 
 
 class TestResourceCacheFactory:
