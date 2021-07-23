@@ -7,8 +7,8 @@ from microcosm_caching.memcached import MemcachedCache
 @defaults(
     enabled=typed(boolean, default_value=False),
     servers=typed(comma_separated_list, default_value="localhost:11211"),
-    connect_timeout=typed(int, default_value=3),
-    read_timeout=typed(int, default_value=2),
+    connect_timeout=typed(float, default_value=3.0),
+    read_timeout=typed(float, default_value=2.0),
     ignore_exc=typed(boolean, default_value=False),
 )
 def configure_resource_cache(graph):
