@@ -3,7 +3,7 @@ from setuptools import find_packages, setup
 
 
 project = "microcosm-caching"
-version = "0.11.0"
+version = "1.0.0"
 
 setup(
     name=project,
@@ -19,20 +19,21 @@ setup(
     install_requires=[
         "boto3>=1.5.8",
         "marshmallow>=3.0.0",
-        "microcosm>=2.12.0",
-        "microcosm-logging>=1.3.0",
+        "microcosm>=4.0.0",
+        "microcosm-logging>=2.0.0",
         "pymemcache>=3.0.0",
         "simplejson>=3.16.0",
     ],
     extras_require={
-        "metrics": "microcosm-metrics>=2.2.0",
+        "metrics": "microcosm-metrics>=3.0.0",
         "lint": [
-            "isort<5",
+            "isort>=5",
         ],
         "test": [
             "coverage>=3.7.1",
             "parameterized>=0.7.4",
             "PyHamcrest>=1.8.5",
+            "pytest-cov>=5.0.0",
         ],
         "typehinting": [
             "mypy",
@@ -40,7 +41,6 @@ setup(
         ],
     },
     setup_requires=[
-        "nose>=1.3.6",
     ],
     dependency_links=[
     ],

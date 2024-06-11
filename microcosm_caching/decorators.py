@@ -3,13 +3,7 @@ from functools import wraps
 from hashlib import sha1
 from logging import Logger
 from time import perf_counter
-from typing import (
-    Any,
-    Dict,
-    List,
-    Optional,
-    Type,
-)
+from typing import Any
 
 from marshmallow import EXCLUDE, Schema
 from microcosm.errors import NotBoundError
@@ -30,18 +24,18 @@ def get_metrics(graph):
         return None
 
 
-def get_build_version(graph) -> Optional[str]:
+def get_build_version(graph) -> str | None:
     build_info: BuildInfo = graph.build_info
     return build_info.sha1
 
 
 @dataclass
 class Invalidation:
-    schema: Type[Schema]
-    arguments: List[str]
-    kwarg_mappings: Optional[Dict[str, str]] = None
+    schema: type[Schema]
+    arguments: list[str]
+    kwarg_mappings: dict[str, str] | None = None
 
-    def from_kwargs(self, kwargs) -> Dict[str, Any]:
+    def from_kwargs(self, kwargs) -> dict[str, Any]:
         """
         Constructs invalidation kwargs based on known search arguments
 
@@ -53,7 +47,7 @@ class Invalidation:
                 for argument in self.arguments
             }
 
-        invalidation_kwargs: Dict[str, Any] = {}
+        invalidation_kwargs: dict[str, Any] = {}
         for argument in self.arguments:
             try:
                 invalidation_kwargs[argument] = kwargs[argument]
@@ -64,7 +58,7 @@ class Invalidation:
         return invalidation_kwargs
 
 
-def cache_key(cache_prefix, schema, args, kwargs, version: Optional[str] = None) -> str:
+def cache_key(cache_prefix, schema, args, kwargs, version: str | None = None) -> str:
     """
     Hash a key according to the schema and input args.
 
@@ -72,15 +66,15 @@ def cache_key(cache_prefix, schema, args, kwargs, version: Optional[str] = None)
     key = (schema.__name__,) + args
     key += tuple(sorted((a, b) for a, b in kwargs.items()))
 
-    return sha1(f"{cache_prefix}:{version}:{key}".encode("utf-8")).hexdigest()
+    return sha1(f"{cache_prefix}:{version}:{key}".encode()).hexdigest()
 
 
 def cached(
     component,
-    schema: Type[Schema],
-    cache_prefix: Optional[str] = None,
+    schema: type[Schema],
+    cache_prefix: str | None = None,
     ttl: int = DEFAULT_TTL,
-    schema_version: Optional[str] = None,
+    schema_version: str | None = None,
 ):
     """
     Caches the result of a decorated component function, given that the both the underlying
@@ -174,7 +168,8 @@ def cached(
                 # later on in the flow. This could probably be made more efficient
                 return schema().load(cached_resource, unknown=EXCLUDE)
             except (MemcacheError, ConnectionRefusedError) as error:
-                logger.warning("Unable to retrieve/save cache data", extra=dict(error=error))
+                msg = str(error)
+                logger.warning("Unable to retrieve/save cache data", extra=dict(error=msg))
                 return func(*args, **kwargs)
 
         return cache
@@ -183,10 +178,10 @@ def cached(
 
 def invalidates(
     component,
-    invalidations: List[Invalidation],
-    cache_prefix: Optional[str] = None,
+    invalidations: list[Invalidation],
+    cache_prefix: str | None = None,
     lock_ttl=DEFAULT_LOCK_TTL,
-    schema_version: Optional[str] = None,
+    schema_version: str | None = None,
 ):
     """
     Invalidates a set of prescribed keys, based on a combination of:
@@ -235,7 +230,7 @@ def invalidates(
             if not resource_cache:
                 return func(*args, **kwargs)
 
-            values: Dict[str, None] = {}
+            values: dict[str, None] = {}
             for invalidation in invalidations:
                 invalidation_kwargs = invalidation.from_kwargs(kwargs)
 
@@ -257,10 +252,10 @@ def invalidates(
 def invalidate_batch(
     component,
     batch_attribute,
-    invalidations: List[Invalidation],
-    cache_prefix: Optional[str] = None,
+    invalidations: list[Invalidation],
+    cache_prefix: str | None = None,
     lock_ttl=DEFAULT_LOCK_TTL,
-    schema_version: Optional[str] = None,
+    schema_version: str | None = None,
 ):
     """
     Invalidates a set of prescribed keys, based on a combination of:
@@ -310,7 +305,7 @@ def invalidate_batch(
             if not resource_cache:
                 return func(*args, **kwargs)
 
-            values: Dict[str, None] = {}
+            values: dict[str, None] = {}
             for item in kwargs[batch_attribute]:
                 # NB: We assume that we don't cache via args
                 for invalidation in invalidations:

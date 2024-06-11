@@ -3,15 +3,14 @@ Store build information.
 
 """
 from dataclasses import dataclass
-from typing import Optional
 
 from microcosm.api import defaults, typed
 
 
 @dataclass
 class BuildInfo:
-    build_num: Optional[str]
-    sha1: Optional[str]
+    build_num: str | None
+    sha1: str | None
 
 
 @defaults(
