@@ -2,11 +2,11 @@
 Unit tests for decorators
 
 """
+from hamcrest import assert_that, is_
 from marshmallow import Schema, fields
 from microcosm.api import binding, create_object_graph, load_from_dict
 from microcosm_logging.decorators import logger
 
-from hamcrest import assert_that, is_
 from microcosm_caching.decorators import (
     Invalidation,
     cache_key,
@@ -58,7 +58,7 @@ class TestController:
 
 class TestDecorators:
 
-    def setup(self):
+    def setup_method(self):
         self.build_version = "asdf1234"
 
         self.graph = create_object_graph(

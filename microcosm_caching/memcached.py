@@ -3,7 +3,6 @@ Serialization helpers for caching.
 
 """
 from enum import IntEnum, unique
-from typing import Optional, Tuple
 
 from pymemcache.client.hash import HashClient
 from pymemcache.test.utils import MockMemcacheClient
@@ -60,7 +59,7 @@ class MemcachedCache(CacheBase):
     """
     def __init__(
         self,
-        servers: Optional[Tuple[str, int]] = None,
+        servers: tuple[str, int] | None = None,
         connect_timeout=None,
         read_timeout=None,
         serde=None,
