@@ -58,3 +58,9 @@ class TestMemcachedCache:
             self.cache.get("key"),
             is_(equal_to(None)),
         )
+
+    def test_flush_all(self):
+        assert_that(
+            self.cache.flush_all(),
+            is_(equal_to(True))
+        )
