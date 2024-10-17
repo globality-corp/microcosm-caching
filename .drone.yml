@@ -11,9 +11,8 @@ trigger:
     - push
 
 
-
 steps:
-  - name: lint-and-type-check
+  - name: lint-and-test
     image: python:3.11-slim
     environment:
       AWS_ACCOUNT_ID:
@@ -30,22 +29,6 @@ steps:
       - aws codeartifact login --tool pip --repository globality-pypi-local --domain globality --domain-owner $AWS_ACCOUNT_ID --region us-east-1
       - ./entrypoint.sh lint
       - ./entrypoint.sh typehinting
-
-  - name: test-py311-latest
-    image: python:3.11-slim
-    environment:
-      AWS_ACCOUNT_ID:
-        from_secret: AWS_ACCOUNT_ID
-      AWS_ACCESS_KEY_ID:
-        from_secret: AWS_ACCESS_KEY_ID
-      AWS_SECRET_ACCESS_KEY:
-        from_secret: AWS_SECRET_ACCESS_KEY
-      EXTRA_INDEX_URL:
-        from_secret: EXTRA_INDEX_URL
-    commands:
-      - pip install -U pip==24.0
-      - pip install awscli
-      - aws codeartifact login --tool pip --repository globality-pypi-local --domain globality --domain-owner $AWS_ACCOUNT_ID --region us-east-1
       - ./entrypoint.sh test
 
   - name: sonar-scanner
@@ -61,8 +44,7 @@ steps:
         -Dsonar.host.url=https://sonarqube.globality.cloud
         -Dsonar.branch.name=${DRONE_BRANCH}
     depends_on:
-      - lint-and-type-check
-      - test-py311-latest
+      - lint-and-test
 
   - name: release-python-library-codeartifact
     image: python:3.11-slim
