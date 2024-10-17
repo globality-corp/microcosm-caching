@@ -79,6 +79,7 @@ nosetests.xml
 coverage.xml
 *,cover
 cover
+microcosm_caching/tests/coverage/
 
 # Translations
 *.mo

@@ -26,15 +26,15 @@
 if [ "$1" = "test" ]; then
    # Install standard test dependencies; YMMV
    pip --quiet install .\[test\] pytest PyHamcrest coverage
-   exec pytest ${NAME}
+   exec pytest microcosm_caching
 elif [ "$1" = "lint" ]; then
    # Install standard linting dependencies; YMMV
    pip --quiet install .\[lint\] flake8 flake8-print flake8-isort
-   flake8 ${NAME}
+   flake8 microcosm_caching
 elif [ "$1" = "typehinting" ]; then
    # Install standard type-linting dependencies
    pip --quiet install .\[typehinting\] mypy
-   mypy ${NAME}
+   mypy microcosm_caching
 else
    echo "Cannot execute $@"
    exit 3
