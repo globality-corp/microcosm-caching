@@ -95,3 +95,6 @@ docs/_build/
 target/
 
 .mypy_cache
+
+# PyCharm
+.idea
