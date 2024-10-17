@@ -125,3 +125,6 @@ class MemcachedCache(CacheBase):
             ttl = 0
 
         return self.client.set_many(values, expire=ttl)
+
+    def flush_all(self):
+        return self.client.flush_all()
